@@ -1,0 +1,4 @@
+/chatbot
+/__pycache__
+.env
+/controllers/__pycache__
