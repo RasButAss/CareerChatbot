@@ -7,6 +7,7 @@ from authlib.integrations.starlette_client import OAuth
 from middlewares import authentication
 from dotenv import load_dotenv
 import logging
+from models import user
 
 load_dotenv()
 
@@ -14,7 +15,7 @@ router = APIRouter(prefix='/auth')
 
 oauth = OAuth()
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 oauth.register(
     name="google",
@@ -37,6 +38,14 @@ async def login(request: Request):
 async def auth_callback(request: Request):
     try: 
         token = await oauth.google.authorize_access_token(request)
+        new_user = await user.find_by_email(token['userinfo']['email'])
+        if new_user == None:
+            new_user = user.User(
+                name = token['userinfo']['name'],
+                email = token['userinfo']['email'],
+                picture = token['userinfo']['picture']
+            )
+            await new_user.create()
         response = RedirectResponse(url="http://localhost:5173/chat")
         response.set_cookie(
             key="token",
