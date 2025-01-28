@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from authlib.integrations.starlette_client import OAuth
-from middlewares import oauth2_scheme
+from middlewares import authentication
 from dotenv import load_dotenv
 import logging
 
@@ -53,7 +53,7 @@ async def auth_callback(request: Request):
     
 
 @router.get("/protected")
-async def protected_route(token: str = Depends(oauth2_scheme)):
+async def protected_route(token: str = Depends(authentication.oauth2_scheme)):
     return {"message": "You have accessed a protected route!", "token": token}
 
 @router.get("/logout")
