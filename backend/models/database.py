@@ -1,6 +1,7 @@
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
-from models import user
+from models.user import User
+from models.chat import Chat, Message
 import os
 
 client = None
@@ -13,7 +14,7 @@ async def init():
     )
 
     # Initialize beanie with the Sample document class and a database
-    await init_beanie(database=client.db_name, document_models=[user.User])
+    await init_beanie(database=client.db_name, document_models=[User, Chat, Message])
 
     print("MongoDB connected")
 

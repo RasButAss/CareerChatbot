@@ -1,13 +1,13 @@
 from fastapi import APIRouter
 import os
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from authlib.integrations.starlette_client import OAuth
 from middlewares import authentication
-from dotenv import load_dotenv
 import logging
-from models import user
+from models.user import User, find_by_email
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -38,9 +38,9 @@ async def login(request: Request):
 async def auth_callback(request: Request):
     try: 
         token = await oauth.google.authorize_access_token(request)
-        new_user = await user.find_by_email(token['userinfo']['email'])
+        new_user = await find_by_email(token['userinfo']['email'])
         if new_user == None:
-            new_user = user.User(
+            new_user = User(
                 name = token['userinfo']['name'],
                 email = token['userinfo']['email'],
                 picture = token['userinfo']['picture']

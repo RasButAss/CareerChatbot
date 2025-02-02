@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
-from controllers import authentication
+from controllers import authentication, chat, llmmodel
 from fastapi.middleware.cors import CORSMiddleware
 from models import database
 from contextlib import asynccontextmanager
 import os
+from dotenv import load_dotenv
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -12,6 +13,7 @@ async def lifespan(app: FastAPI):
     yield
     await database.close()
 
+load_dotenv()
 app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
@@ -23,8 +25,9 @@ app.add_middleware(
 )
 
 app.include_router(authentication.router)
+app.include_router(chat.router)
+app.include_router(llmmodel.router)
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY"))
-
 
 @app.get("/")
 async def root():

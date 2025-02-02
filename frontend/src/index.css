@@ -2,6 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
+body, p, ol, ul {
     margin : 0px;
 }
