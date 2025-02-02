@@ -1,9 +1,13 @@
 # Career Chatbot
 ## Backend setup
-1. Create python environment
-2. Run the commands below:
+1. Create python environment:
    ```
    cd backend
+   python3 -m venv chatbot
+   source ./backend/chatbot/bin/activate
+   ```
+2. Run the commands below:
+   ```
    pip install requirements.txt
    ```
 3. Run mistral on Ollama:
