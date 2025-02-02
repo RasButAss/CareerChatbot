@@ -4,7 +4,7 @@
    ```
    cd backend
    python3 -m venv chatbot
-   source ./backend/chatbot/bin/activate
+   source ./chatbot/bin/activate
    ```
 2. Run the commands below:
    ```
