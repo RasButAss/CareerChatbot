@@ -12,5 +12,5 @@ class User(Document):
     chats : List[Link[Chat]] = []
 
 async def find_by_email(email : str):
-    user = await User.find_one(User.email == email)
+    user = await User.find_one(User.email == email, fetch_links=True)
     return user

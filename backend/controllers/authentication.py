@@ -7,6 +7,7 @@ from authlib.integrations.starlette_client import OAuth
 from middlewares import authentication
 import logging
 from models.user import User, find_by_email
+from models.chat import Chat, Message
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -39,6 +40,7 @@ async def auth_callback(request: Request):
     try: 
         token = await oauth.google.authorize_access_token(request)
         new_user = await find_by_email(token['userinfo']['email'])
+        current_chat_id = ""
         if new_user == None:
             new_user = User(
                 name = token['userinfo']['name'],
@@ -46,7 +48,13 @@ async def auth_callback(request: Request):
                 picture = token['userinfo']['picture']
             )
             await new_user.create()
-        response = RedirectResponse(url="http://localhost:5173/chat")
+            new_chat = Chat()
+            new_user.chats.append(new_chat)
+            await new_user.save()
+            current_chat_id = new_chat.id
+        else:
+            current_chat_id = new_user.chats[-1].id
+        response = RedirectResponse(url=f"http://localhost:5173/chat/{current_chat_id}")
         response.set_cookie(
             key="user_info",
             value=token['userinfo'],
