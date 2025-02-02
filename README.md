@@ -14,7 +14,15 @@
    ```
    ollama run mistral
    ```
-4. Run fastapi server:
+4. Setup `.env` file:
+   ```
+   GOOGLE_CLIENT_ID=
+   GOOGLE_CLIENT_SECRET=
+   GOOGLE_REDIRECT_URI=
+   SECRET_KEY=somesecret
+   MONGODB_CONNECTION_STRING=
+   ```
+5. Run fastapi server:
    ```
    fastapi run main.py
    ```
