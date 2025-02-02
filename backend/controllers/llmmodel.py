@@ -1,14 +1,17 @@
-from fastapi import APIRouter, HTTPException, WebSocket
-from pydantic import BaseModel
-import requests
+from fastapi import APIRouter, WebSocket
 from ollama import AsyncClient
+from models.chat import Chat, Message
 
 router = APIRouter(prefix="/model")
 llm = AsyncClient(host="http://localhost:11434")
 
-class Query(BaseModel):
-    prompt: str
-    model: str = "mistral"
+# TODO: Raise Exception if chat of given id does not exist
+async def create_message(role: str, content : str, id : str):
+    new_message = Message(role=role, content=content)
+    await new_message.create()
+    chat = await Chat.get(id)
+    chat.messages.append(new_message)
+    await chat.save()
 
 @router.websocket("/generate")
 async def generate_text(websocket : WebSocket):
@@ -16,10 +19,14 @@ async def generate_text(websocket : WebSocket):
     try:
         query = await websocket.receive_json()
         message = {'role' : 'user', 'content' : query['prompt']}
+        llm_response = ""
         async for chunk in await llm.chat(model=query['model'], messages=[message], stream=True):
-            print(chunk['message']['content'], end='', flush=True)
+            llm_response += chunk['message']['content']
             await websocket.send_text(chunk['message']['content'])
         await websocket.send_text('**||END||**')
+        print(llm_response)
+        await create_message(role='user', content=query['prompt'], id=query['id'])
+        await create_message(role='assistant', content=llm_response, id=query['id'])
     except Exception as e:
         print(f'WebSocket error: {str(e)}')
     finally:

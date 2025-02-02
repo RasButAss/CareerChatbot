@@ -32,11 +32,7 @@ async def get_chats(email : str):
         nesting_depth=1
     )
     if user:
-        response = []
-        for chat in user.chats:
-            new_chat = {'id': str(chat.id), 'topic' : chat.topic}
-            response.append(new_chat)
-        return response
+        return user
     else:
         return {"Error" : "User does not exist"}
 

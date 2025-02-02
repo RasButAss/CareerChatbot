@@ -2,16 +2,60 @@ import { Grid, TextField, Container, IconButton, TextArea, Flex, ScrollArea } fr
 import React, {useEffect, useRef, useState} from 'react'
 import { PaperPlaneIcon, PlusIcon, FileTextIcon  } from '@radix-ui/react-icons'
 import { Sidebar, Menu, MenuItem, SubMenu } from 'react-pro-sidebar';
-import { LayoutDashboard, Home, SquareMenu, CirclePlusIcon } from "lucide-react";
+import { LayoutDashboard, Home, SquareMenu, CirclePlusIcon, HistoryIcon } from "lucide-react";
+import axios from 'axios'
 import Message from './Message'
+import Cookies from 'js-cookie'
+import { useParams, useNavigate } from 'react-router';
 
 const Chat = () => {
+  const { id } = useParams()
   const [collapsed, setCollapsed] = useState(false)
   const [inputText, setInputText] = useState('')
   const [messages, setMessages] = useState('');
+  const [history, setHistory] = useState([])
   const [chats, setChats] = useState([])
   const [socket, setSocket] = useState(null);
-  // const [temp, setTemp] = useState([])
+  const [currentId, setCurrentId] = useState(id)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const infoString = Cookies.get('user_info')
+        let fixedString = infoString.replace(/\\054/g, ',')
+        fixedString = fixedString.replace(/'/g, '"'); // Replace single quotes with double quotes
+        fixedString = fixedString.replace(/True/g, 'true'); // Fix boolean values
+        fixedString = fixedString.replace(/False/g, 'false');
+        const info = JSON.parse(fixedString)
+        console.log(info.email)
+        const response = await axios.get("http://localhost:8000/chat/", {
+          params: {
+            email: info.email
+          }
+        })
+        console.log(response.data.chats)
+        setHistory(response.data.chats)
+      } catch(error) {
+        console.error(error)
+      }
+    }
+    const handleChatHistory = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/chat/${currentId}`)
+        let id_messages = []
+        for(const id_message of response.data.messages) {
+          id_messages.push(id_message.content)
+        }
+        setChats(id_messages)
+        console.log(id_messages)
+      } catch(error) {
+        console.error(error)
+      }
+    }
+    fetchData();
+    handleChatHistory()
+  }, [currentId])
   
   useEffect(() => {
     if(socket) {
@@ -19,6 +63,7 @@ const Chat = () => {
         console.log("Connected to WebSocket")
         setChats([...chats,inputText])
         const message = {
+          "id" : currentId,
           "prompt" : inputText,
           "model" : "mistral"
         }
@@ -49,19 +94,47 @@ const Chat = () => {
     connectWebsocket();
   };
 
+  const handleNavigate = (new_id) => {
+    setCurrentId(new_id)
+    navigate(`/chat/${new_id}`)
+  } 
+
+  const handleNewChat = async () => {
+    try {
+      const infoString = Cookies.get('user_info')
+      let fixedString = infoString.replace(/\\054/g, ',')
+      fixedString = fixedString.replace(/'/g, '"'); // Replace single quotes with double quotes
+      fixedString = fixedString.replace(/True/g, 'true'); // Fix boolean values
+      fixedString = fixedString.replace(/False/g, 'false');
+      const info = JSON.parse(fixedString)
+      console.log(info.email)
+      const response = await axios.post('http://localhost:8000/chat/',{}, {
+        params : {
+          email : info.email
+        }
+      })
+      setHistory((prev) => [...prev, response.data])
+      console.log(response.data)
+      handleNavigate(response.data._id)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   return (
     <Flex direction="row">
     <Flex height="100vh">
-        <Sidebar collapsed={collapsed} collapsedWidth='65px'>
+        <Sidebar collapsed={collapsed} collapsedWidth='75px'>
           <Menu>
-            <MenuItem >
-              <div onClick={(e) => {setCollapsed(!collapsed)}} className='w-min'>
-                <SquareMenu />
-              </div>
+            <MenuItem icon={<SquareMenu />} onClick={(e) => {setCollapsed(!collapsed)}}>
+              {
+                !collapsed ?
+                  "Menu"
+                 : null
+              }
             </MenuItem>
-            <MenuItem className='items-center justify-center'> 
+            <MenuItem className='items-center justify-center' icon={<CirclePlusIcon />} onClick={(e) => {handleNewChat()}}> 
             <Flex gap="3">
-              <CirclePlusIcon />
               {
                 !collapsed ?
                   "New Chat"
@@ -69,6 +142,11 @@ const Chat = () => {
               }
             </Flex>
             </MenuItem>
+            <SubMenu label="History" icon={<HistoryIcon />}>
+              {history.map((element, index) => (
+                <MenuItem key={index} onClick={(e) => {handleNavigate(element.id)}}>{element.topic}</MenuItem>
+              ))}
+            </SubMenu>
           </Menu>
         </Sidebar>
     </Flex>

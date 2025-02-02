@@ -48,9 +48,9 @@ async def auth_callback(request: Request):
             await new_user.create()
         response = RedirectResponse(url="http://localhost:5173/chat")
         response.set_cookie(
-            key="token",
-            value=token,
-            httponly=True,
+            key="user_info",
+            value=token['userinfo'],
+            httponly=False,
             secure=True,
             samesite="lax"
         )
