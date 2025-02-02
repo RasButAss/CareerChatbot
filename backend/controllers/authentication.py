@@ -49,6 +49,7 @@ async def auth_callback(request: Request):
             )
             await new_user.create()
             new_chat = Chat()
+            await new_chat.create()
             new_user.chats.append(new_chat)
             await new_user.save()
             current_chat_id = new_chat.id
